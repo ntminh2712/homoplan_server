@@ -13,6 +13,5 @@ namespace SeminarAPI.Data.Model
         public string? female_usd { get; set; }
         public string? male_usd { get; set; }
         public string? amount_usd { get; set; }
-        public string? reward_amount { get; set; }
     }
 }

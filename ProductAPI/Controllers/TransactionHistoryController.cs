@@ -47,6 +47,18 @@ namespace SeminarAPI.Controllers
             return Ok(response);
         }
 
+        [HttpGet("JobRanking")]
+        public async Task<IActionResult> JobRanking()
+        {
+            var response = await _transactionHistory.JobRanking();
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
         [HttpPost("CreatedTransaction")]
         public async Task<string> CreatedTransaction([FromForm] TransactionHistoryDto data)
         {

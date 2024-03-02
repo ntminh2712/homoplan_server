@@ -9,6 +9,7 @@ namespace SeminarAPI.Repositories.Interface
     {
         Task<List<ResTransactionHistoryDto>> GetRewardDailyByUser(string userId);
         Task<List<ResRankingDto>> GetRanking();
+        Task<string> JobRanking();
         Task<string> CreatedTransaction(TransactionHistoryDto data);
     }
 }

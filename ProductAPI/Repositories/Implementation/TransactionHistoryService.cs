@@ -84,7 +84,7 @@ namespace SeminarAPI.Repositories.Implementation
                                   status = data.status,
                                   Created_At = data.Created_At
                               }
-                    ).OrderBy(x => x.Created_At).ToList();
+                    ).OrderByDescending(x => x.Created_At).ToList();
                 if (result != null)
                     return result;
 
@@ -118,7 +118,7 @@ namespace SeminarAPI.Repositories.Implementation
                                     status = data.status,
                                     created_at = data.Created_At
                               }
-                    ).OrderBy(x => x.created_at).ToList();
+                    ).OrderByDescending(x => x.created_at).ToList();
                 if (result != null)
                     return result;
 
@@ -127,6 +127,55 @@ namespace SeminarAPI.Repositories.Implementation
             catch (Exception ex)
             {
                 return null;
+            }
+        }
+
+        public async Task<string> JobRanking()
+        {
+            try
+            {
+                var result = (from data in _context.Users
+                              join wallet in _context.Wallet on
+                              data.User_Id equals wallet.user_id into wallet_temp
+                              from wallet in wallet_temp.DefaultIfEmpty()
+                              select new RewardRankingDto
+                              {
+                                  user_id = data.User_Id,
+                                  reward_amount = wallet.male_usd
+                              }
+                    ).ToList();
+
+                foreach ( var item in result )
+                {
+                    var rankingData = (from data in _context.Ranking
+                                       where data.user_id == item.user_id
+                                       select data
+                                       ).FirstOrDefault();
+
+                    if ( rankingData != null )
+                    {
+                        rankingData.reward_amount = item.reward_amount;
+                        _context.Ranking.Update(rankingData);
+                    }
+                    else
+                    {
+                        Ranking ranking = new Ranking();
+                        ranking.ranking_id = Guid.NewGuid().ToString();
+                        ranking.user_id = item.user_id;
+                        ranking.reward_amount = item.reward_amount;
+                        ranking.type = "0";
+                        ranking.status = 0;
+                        ranking.Created_At = DateTime.Now;
+                        _context.Ranking.AddAsync(ranking);
+                    }
+                    _context.SaveChanges();
+                }
+
+                return "Success";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
             }
         }
     }
