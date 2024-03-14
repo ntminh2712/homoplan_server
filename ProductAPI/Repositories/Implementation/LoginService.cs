@@ -126,22 +126,7 @@ namespace SeminarAPI.Repositories.Implementation
                 var getPath = folderPath + "/Avatar";
                 var sshNetHelper = new ServerPathHelper(host, username, password);
                 var avatarUpload = data.avatar;
-                if (avatarUpload == null || avatarUpload.Length == 0)
-                {
-                    return ("Vui lòng upload avatar");
-                }
-                var folderPathDelegate = folderPath + "/Avatar";
-
-                var avatarName = System.IO.Path.GetFileName(avatarUpload.FileName).Replace(@"\", "");
-                var filePathUpload = System.IO.Path.Combine(getPath + "/", avatarName);
-
-                var checkFileExists = sshNetHelper.CheckFileExists(filePathUpload);
-                if (checkFileExists)
-                {
-                    avatarName = Guid.NewGuid().ToString() + "_" + avatarName;
-                    filePathUpload = System.IO.Path.Combine(getPath + "/", avatarName);
-                }
-                var filePathUser = sshNetHelper.UploadFile(avatarUpload, filePathUpload);
+                
 
 
 
@@ -157,9 +142,25 @@ namespace SeminarAPI.Repositories.Implementation
 				newUser.partner_id = data.partner_id;
 				newUser.Reference_Id = rnd.Next().ToString();
                 newUser.reference_count = 0;
-				newUser.avatar = filePathUser;
+				
+                if (avatarUpload != null)
+                {
+                    var folderPathDelegate = folderPath + "/Avatar";
+                    var avatarName = System.IO.Path.GetFileName(avatarUpload.FileName).Replace(@"\", "");
+                    var filePathUpload = System.IO.Path.Combine(getPath + "/", avatarName);
 
-				newUser.Created_At = DateTime.Now;
+                    var checkFileExists = sshNetHelper.CheckFileExists(filePathUpload);
+                    if (checkFileExists)
+                    {
+                        avatarName = Guid.NewGuid().ToString() + "_" + avatarName;
+                        filePathUpload = System.IO.Path.Combine(getPath + "/", avatarName);
+                    }
+                    var filePathUser = sshNetHelper.UploadFile(avatarUpload, filePathUpload);
+                    newUser.avatar = filePathUser;
+                }
+                
+
+                newUser.Created_At = DateTime.Now;
 
 				var result = await _context.Users.AddAsync(newUser);
 
@@ -172,6 +173,23 @@ namespace SeminarAPI.Repositories.Implementation
                 walletUser.Created_At = DateTime.Now;
 
                 await _context.Wallet.AddAsync(walletUser);
+
+				if (!string.IsNullOrEmpty(data.partner_id))
+				{
+					var partner = _context.Users.Where(x => x.Reference_Id == data.partner_id).FirstOrDefault();
+					if (partner != null)
+					{
+                        partner.reference_count = partner.reference_count + 1;
+                        _context.Users.Update(partner);
+
+						var walletPartner = _context.Wallet.Where(x => x.user_id == partner.User_Id).FirstOrDefault();
+						if (walletPartner != null)
+						{
+                            walletPartner.male_usd = (Int32.Parse(walletPartner.male_usd) + 100).ToString();
+                            _context.Wallet.Update(walletPartner);
+                        }
+                    }
+				}
 
                 await _context.SaveChangesAsync();
 

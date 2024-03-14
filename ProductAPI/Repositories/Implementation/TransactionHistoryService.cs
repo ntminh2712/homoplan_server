@@ -84,7 +84,7 @@ namespace SeminarAPI.Repositories.Implementation
                                   status = data.status,
                                   Created_At = data.Created_At
                               }
-                    ).OrderByDescending(x => x.Created_At).ToList();
+                    ).OrderByDescending(x => x.reward_amount).ToList();
                 if (result != null)
                     return result;
 
