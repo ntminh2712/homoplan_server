@@ -38,7 +38,7 @@ namespace SeminarAPI.Repositories.Implementation
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public async Task<(UserDto data, string response)> Login(UserDto data)
+		public async Task<(UserDto data, string response)> Login(UserLoginDto data)
 		{
 			try
 			{
@@ -64,7 +64,7 @@ namespace SeminarAPI.Repositories.Implementation
                     var serverUrl = _configuration["AppSettings:UrlServer"];
 
                     var userReturn = new UserDto();
-					userReturn.User_Id = data.User_Id;
+					userReturn.User_Id = getUser.User_Id;
 					userReturn.User_Name = getUser.User_Name;
 					userReturn.avatar_path = serverUrl + "/api/Delegate/get-image/" + System.IO.Path.GetFileName(getUser.avatar);
                     userReturn.Phone = getUser.Phone;

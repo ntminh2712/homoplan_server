@@ -29,7 +29,7 @@ namespace SeminarAPI.Controllers
 		/// <param name="data"></param>
 		/// <returns></returns>
 		[HttpPost(template: nameof(Login))]
-		public async Task<IActionResult> Login([FromBody] UserDto data)
+		public async Task<IActionResult> Login([FromForm] UserLoginDto data)
 		{
 			if (data == null)
 			{
