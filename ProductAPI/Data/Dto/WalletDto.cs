@@ -9,6 +9,7 @@ namespace SeminarAPI.Data.Dto
         public string? female_usd { get; set; }
         public string? male_usd { get; set; }
         public string? amount_usd { get; set; }
+        public string? daily_rewards { get; set; }
         public DateTime? created_at { get; set; }
     }
 }

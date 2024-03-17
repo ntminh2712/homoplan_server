@@ -48,7 +48,7 @@ namespace SeminarAPI.Extensions
             services.AddTransient<ILoginService, LoginService>();
             services.AddTransient<IDailyTasksService, DailyTasksService>();
             services.AddTransient<IChallengeTasksService, ChallengeTasksService>();
-            services.AddTransient<ITransactionHistory, TransactionHistoryService>();
+            services.AddTransient<ITransaction, TransactionService>();
         }
     }
 }

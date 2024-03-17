@@ -14,11 +14,11 @@ namespace SeminarAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TransactionHistoryController : ControllerBase
+    public class TransactionController : ControllerBase
     {
-        private readonly ITransactionHistory _transactionHistory;
+        private readonly ITransaction _transactionHistory;
 
-        public TransactionHistoryController(ITransactionHistory transactionHistory)
+        public TransactionController(ITransaction transactionHistory)
         {
             _transactionHistory = transactionHistory;
         }
@@ -27,6 +27,18 @@ namespace SeminarAPI.Controllers
         public async Task<IActionResult> GetRewardDailyByUser(string userId)
         {
             var response = await _transactionHistory.GetRewardDailyByUser(userId);
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
+        [HttpGet("GetWalletByUser")]
+        public async Task<IActionResult> GetWalletByUser(string userId)
+        {
+            var response = await _transactionHistory.GetWalletByUser(userId);
             if (response == null)
             {
                 return NotFound();

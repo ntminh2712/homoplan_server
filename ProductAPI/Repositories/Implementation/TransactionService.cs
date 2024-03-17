@@ -11,13 +11,14 @@ using RazorEngineCore;
 using Microsoft.AspNetCore.Mvc;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Globalization;
 
 namespace SeminarAPI.Repositories.Implementation
 {
     /// <summary>
     /// OrderService Implementation
     /// </summary>
-    public class TransactionHistoryService : Interface.ITransactionHistory
+    public class TransactionService : Interface.ITransaction
     {
         /// <summary>
         /// _context
@@ -28,7 +29,7 @@ namespace SeminarAPI.Repositories.Implementation
         /// DietService
         /// </summary>
         /// <param name="context"></param>
-        public TransactionHistoryService(SeminarDbContext context)
+        public TransactionService(SeminarDbContext context)
         {
             _context = context;
         }
@@ -37,12 +38,21 @@ namespace SeminarAPI.Repositories.Implementation
         {
             try
             {
+                int rewardAmount = 0;
+                if (!string.IsNullOrEmpty(data.challenge_tasks_id))
+                {
+                    rewardAmount = Int32.Parse(_context.ChallengeTasks.Where(x => x.challenge_tasks_id == data.challenge_tasks_id).FirstOrDefault().reward_amount);
+                } 
+                else if (!string.IsNullOrEmpty(data.daily_tasks_id))
+                {
+                    rewardAmount = Int32.Parse(_context.DailyTasks.Where(x => x.daily_tasks_id == data.daily_tasks_id).FirstOrDefault().reward_amount);
+                }
                 TransactionHistory transaction = new TransactionHistory();
                 transaction.transaction_history_id = Guid.NewGuid().ToString();
                 transaction.daily_tasks_id = data.daily_tasks_id;
                 transaction.user_id = data.user_id;
                 transaction.challenge_tasks_id = data.challenge_tasks_id;
-                transaction.reward_amount = data.reward_amount;
+                transaction.reward_amount = rewardAmount.ToString();
                 transaction.type = data.type;
                 transaction.status = data.status;
                 transaction.Created_At = DateTime.Now;
@@ -50,9 +60,8 @@ namespace SeminarAPI.Repositories.Implementation
                 await _context.TransactionHistory.AddAsync(transaction);
 
                 var walletUser = _context.Wallet.Where(x => x.user_id == data.user_id).FirstOrDefault();
-                var amount = Int32.Parse(walletUser.male_usd) + Int32.Parse(data.reward_amount);
+                var amount = Int32.Parse(walletUser.male_usd) + rewardAmount;
                 walletUser.male_usd = amount.ToString();
-
                 _context.Wallet.Update(walletUser);
 
                 await _context.SaveChangesAsync();
@@ -123,6 +132,36 @@ namespace SeminarAPI.Repositories.Implementation
                     return result;
 
                 return new List<ResTransactionHistoryDto>();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public async Task<WalletDto> GetWalletByUser(string userId)
+        {
+            try
+            {
+                var dateNow = DateTime.Now.Date;
+                var getDailyRewards = _context.TransactionHistory.Where(x => x.Created_At.Date == dateNow && x.user_id == userId).ToList();
+                var rewards = getDailyRewards.Count() > 0 ? getDailyRewards.Sum(x => Int32.Parse(x.reward_amount)) : 0;
+                var result = (from data in _context.Wallet
+                              where data.user_id == userId
+                              select new WalletDto
+                              {
+                                  wallet_id = data.wallet_id,
+                                  user_id = data.user_id,
+                                  female_usd = data.female_usd,
+                                  male_usd = data.male_usd,
+                                  amount_usd = data.amount_usd,
+                                  daily_rewards = rewards.ToString(),
+                                  created_at = data.Created_At
+                              }).FirstOrDefault();
+                if (result != null)
+                    return result;
+
+                return new WalletDto();
             }
             catch (Exception ex)
             {
