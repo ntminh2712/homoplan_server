@@ -54,7 +54,7 @@ namespace SeminarAPI.Controllers
 		/// <param name="data"></param>
 		/// <returns></returns>
 		[HttpPost(template: nameof(Register))]
-		public async Task<IActionResult> Register([FromForm] UserDto data)
+		public async Task<IActionResult> Register([FromForm] RegisterDto data)
 		{
 			if (data == null)
 			{

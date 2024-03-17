@@ -11,6 +11,6 @@ namespace SeminarAPI.Repositories.Interface
         Task<WalletDto> GetWalletByUser(string userId);
         Task<List<ResRankingDto>> GetRanking();
         Task<string> JobRanking();
-        Task<string> CreatedTransaction(TransactionHistoryDto data);
+        Task<string> CreatedTransaction(RequestTransactionDto data);
     }
 }

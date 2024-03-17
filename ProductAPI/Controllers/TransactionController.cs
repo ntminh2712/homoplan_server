@@ -72,7 +72,7 @@ namespace SeminarAPI.Controllers
         }
 
         [HttpPost("CreatedTransaction")]
-        public async Task<string> CreatedTransaction([FromForm] TransactionHistoryDto data)
+        public async Task<string> CreatedTransaction([FromForm] RequestTransactionDto data)
         {
             if (data == null)
             {

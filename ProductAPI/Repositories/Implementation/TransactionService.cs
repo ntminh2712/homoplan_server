@@ -34,7 +34,7 @@ namespace SeminarAPI.Repositories.Implementation
             _context = context;
         }
 
-        public async Task<string> CreatedTransaction(TransactionHistoryDto data)
+        public async Task<string> CreatedTransaction(RequestTransactionDto data)
         {
             try
             {

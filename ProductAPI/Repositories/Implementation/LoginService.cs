@@ -93,7 +93,7 @@ namespace SeminarAPI.Repositories.Implementation
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public async Task<string> Register(UserDto data)
+		public async Task<string> Register(RegisterDto data)
 		{
 			try
 			{
