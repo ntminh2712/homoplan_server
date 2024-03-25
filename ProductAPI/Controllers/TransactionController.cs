@@ -72,20 +72,20 @@ namespace SeminarAPI.Controllers
         }
 
         [HttpPost("CreatedTransaction")]
-        public async Task<string> CreatedTransaction([FromForm] RequestTransactionDto data)
+        public async Task<IActionResult> CreatedTransaction([FromForm] RequestTransactionDto data)
         {
             if (data == null)
             {
-                return "Request body is empty";
+                return BadRequest("Request body is empty");
             }
 
             var response = await _transactionHistory.CreatedTransaction(data);
             if (response == null)
             {
-                return "Created false!";
+                return BadRequest("Created false!");
             }
 
-            return response;
+            return Ok("Thêm điểm thành công");
         }
 
         //[HttpPut("{id}")]

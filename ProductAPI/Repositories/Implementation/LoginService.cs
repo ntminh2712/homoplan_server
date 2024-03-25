@@ -182,12 +182,20 @@ namespace SeminarAPI.Repositories.Implementation
                         partner.reference_count = partner.reference_count + 1;
                         _context.Users.Update(partner);
 
-						var walletPartner = _context.Wallet.Where(x => x.user_id == partner.User_Id).FirstOrDefault();
+						var referralMoney = _configuration["ReferralMoney"];
+                        var walletPartner = _context.Wallet.Where(x => x.user_id == partner.User_Id).FirstOrDefault();
 						if (walletPartner != null)
 						{
-                            walletPartner.male_usd = (Int32.Parse(walletPartner.male_usd) + 100).ToString();
+                            walletPartner.male_usd = (Int32.Parse(walletPartner.male_usd) + Convert.ToInt32(referralMoney)).ToString();
                             _context.Wallet.Update(walletPartner);
                         }
+
+						TransactionHistory transactionHistory = new TransactionHistory();
+						transactionHistory.transaction_history_id = Guid.NewGuid().ToString();
+                        transactionHistory.user_id = partner.User_Id;
+						transactionHistory.reward_amount = referralMoney;
+						transactionHistory.type = "2";
+                        await _context.TransactionHistory.AddAsync(transactionHistory);
                     }
 				}
 

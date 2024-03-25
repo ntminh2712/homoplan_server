@@ -13,5 +13,6 @@ namespace SeminarAPI.Repositories.Interface
     public interface IDailyTasksService
     {
         Task<List<DailyTasks>> GetAll();
+        Task<string> SuccessDailyTask(string userId, string dailytask_id);
     }
 }

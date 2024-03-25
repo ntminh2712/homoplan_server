@@ -35,6 +35,19 @@ namespace SeminarAPI.Controllers
             return Ok(response);
         }
 
+
+        [HttpGet("SuccessDailyTask/{userId}/{dailytask_id}")]
+        public async Task<IActionResult> SuccessDailyTask(string userId, string dailytask_id)
+        {
+            var response = await _dailyTasksService.SuccessDailyTask(userId, dailytask_id);
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
         //[HttpPost("Created")]
         //public async Task<string> Post([FromForm] DailyTasksDto data)
         //{
