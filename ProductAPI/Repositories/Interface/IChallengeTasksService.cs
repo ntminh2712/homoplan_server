@@ -13,5 +13,6 @@ namespace SeminarAPI.Repositories.Interface
     public interface IChallengeTasksService
     {
         Task<List<ChallengeTasks>> GetAll();
+        Task<List<ChallengeTasks>> GetAllChallengeTaskByUser(string userId);
     }
 }

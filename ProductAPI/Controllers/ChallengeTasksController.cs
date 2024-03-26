@@ -35,6 +35,18 @@ namespace SeminarAPI.Controllers
             return Ok(response);
         }
 
+        [HttpGet("GetAllChallengeTaskByUser")]
+        public async Task<IActionResult> GetAllChallengeTaskByUser(string userId)
+        {
+            var response = await _challengeTasksService.GetAllChallengeTaskByUser(userId);
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
         //[HttpPost("Created")]
         //public async Task<string> Post([FromForm] DailyTasksDto data)
         //{

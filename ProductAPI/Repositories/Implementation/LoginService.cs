@@ -183,21 +183,47 @@ namespace SeminarAPI.Repositories.Implementation
                         _context.Users.Update(partner);
 
 						var referralMoney = _configuration["ReferralMoney"];
-                        var walletPartner = _context.Wallet.Where(x => x.user_id == partner.User_Id).FirstOrDefault();
-						if (walletPartner != null)
-						{
-                            walletPartner.male_usd = (Int32.Parse(walletPartner.male_usd) + Convert.ToInt32(referralMoney)).ToString();
-                            _context.Wallet.Update(walletPartner);
-                        }
-
+                        
 						TransactionHistory transactionHistory = new TransactionHistory();
-						transactionHistory.transaction_history_id = Guid.NewGuid().ToString();
+                        TransactionHistory transactionHistory2 = new TransactionHistory();
+
+                        transactionHistory.transaction_history_id = Guid.NewGuid().ToString();
                         transactionHistory.user_id = partner.User_Id;
 						transactionHistory.reward_amount = referralMoney;
 						transactionHistory.type = "2";
+						transactionHistory.status = 0;
                         await _context.TransactionHistory.AddAsync(transactionHistory);
+
+						var checkChallenge = partner.reference_count % 5;
+						if(checkChallenge == 0)
+						{
+							var levelChallenge = partner.reference_count / 5;
+							var getChallengeId = await _context.ChallengeTasks.FirstOrDefaultAsync(x => x.level == levelChallenge);
+							if (getChallengeId != null)
+							{
+                                transactionHistory2.transaction_history_id = Guid.NewGuid().ToString();
+                                transactionHistory2.user_id = partner.User_Id;
+								transactionHistory2.challenge_tasks_id = getChallengeId.challenge_tasks_id;
+								transactionHistory2.reward_amount = getChallengeId.reward_amount;
+                                transactionHistory2.type = "3";
+                                transactionHistory2.status = 0;
+                                await _context.TransactionHistory.AddAsync(transactionHistory);
+                            }
+                        }
+
+                        var walletPartner = _context.Wallet.Where(x => x.user_id == partner.User_Id).FirstOrDefault();
+                        if (walletPartner != null)
+                        {
+                            walletPartner.male_usd = (Int32.Parse(walletPartner.male_usd) + Convert.ToInt32(referralMoney)).ToString();
+							if(transactionHistory2 != null)
+							{
+                                walletPartner.male_usd = (int.Parse(walletPartner.male_usd) + int.Parse(transactionHistory2.reward_amount)).ToString();
+                            }
+                            _context.Wallet.Update(walletPartner);
+                        }
+
                     }
-				}
+                }
 
                 await _context.SaveChangesAsync();
 

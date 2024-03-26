@@ -46,5 +46,28 @@ namespace SeminarAPI.Repositories.Implementation
                 return null;
             }
         }
+
+        public async Task<List<ChallengeTasks>> GetAllChallengeTaskByUser(string userId)
+        {
+            List<ChallengeTasks> response = new List<ChallengeTasks>();
+            var getAllChallengeTask = await _context.ChallengeTasks.ToListAsync();
+            var getAllChallengeSuccess = await _context.TransactionHistory.Where(x => x.user_id == userId && x.type == "3").ToListAsync();
+            if(getAllChallengeSuccess.Count > 0) 
+            { 
+                foreach(var item in getAllChallengeTask)
+                {
+                    var checkChallenge = getAllChallengeSuccess.Where(x => x.challenge_tasks_id == item.challenge_tasks_id).FirstOrDefault();
+                    if (checkChallenge != null) {
+                        item.status = 1;
+                        response.Add(item);
+                    }
+                    else
+                    {
+                        response.Add(item);
+                    }
+                }
+            }
+            return response;
+        }
     }
 }
