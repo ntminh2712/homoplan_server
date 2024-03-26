@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Globalization;
+using System.Transactions;
 
 namespace SeminarAPI.Repositories.Implementation
 {
@@ -34,43 +35,43 @@ namespace SeminarAPI.Repositories.Implementation
             _context = context;
         }
 
-        public async Task<string> CreatedTransaction(RequestTransactionDto data)
-        {
-            try
-            {
-                int rewardAmount = 0;
-                if (!string.IsNullOrEmpty(data.challenge_tasks_id))
-                {
-                    rewardAmount = Int32.Parse(_context.ChallengeTasks.Where(x => x.challenge_tasks_id == data.challenge_tasks_id).FirstOrDefault().reward_amount);
-                } 
-                else if (!string.IsNullOrEmpty(data.daily_tasks_id))
-                {
-                    rewardAmount = Int32.Parse(_context.DailyTasks.Where(x => x.daily_tasks_id == data.daily_tasks_id).FirstOrDefault().reward_amount);
-                }
-                TransactionHistory transaction = new TransactionHistory();
-                transaction.transaction_history_id = Guid.NewGuid().ToString();
-                transaction.daily_tasks_id = data.daily_tasks_id;
-                transaction.user_id = data.user_id;
-                transaction.challenge_tasks_id = data.challenge_tasks_id;
-                transaction.reward_amount = rewardAmount.ToString();
-                transaction.type = data.type;
-                transaction.status = data.status;
-                transaction.Created_At = DateTime.Now;
+        //public async Task<string> CreatedTransaction(RequestTransactionDto data)
+        //{
+        //    try
+        //    {
+        //        int rewardAmount = 0;
+        //        if (!string.IsNullOrEmpty(data.challenge_tasks_id))
+        //        {
+        //            rewardAmount = Int32.Parse(_context.ChallengeTasks.Where(x => x.challenge_tasks_id == data.challenge_tasks_id).FirstOrDefault().reward_amount);
+        //        } 
+        //        else if (!string.IsNullOrEmpty(data.daily_tasks_id))
+        //        {
+        //            rewardAmount = Int32.Parse(_context.DailyTasks.Where(x => x.daily_tasks_id == data.daily_tasks_id).FirstOrDefault().reward_amount);
+        //        }
+        //        TransactionHistory transaction = new TransactionHistory();
+        //        transaction.transaction_history_id = Guid.NewGuid().ToString();
+        //        transaction.daily_tasks_id = data.daily_tasks_id;
+        //        transaction.user_id = data.user_id;
+        //        transaction.challenge_tasks_id = data.challenge_tasks_id;
+        //        transaction.reward_amount = rewardAmount.ToString();
+        //        transaction.type = data.type;
+        //        transaction.status = data.status;
+        //        transaction.Created_At = DateTime.Now;
 
-                await _context.TransactionHistory.AddAsync(transaction);
+        //        await _context.TransactionHistory.AddAsync(transaction);
 
-                var walletUser = _context.Wallet.Where(x => x.user_id == data.user_id).FirstOrDefault();
-                var amount = Int32.Parse(walletUser.male_usd) + rewardAmount;
-                walletUser.male_usd = amount.ToString();
-                _context.Wallet.Update(walletUser);
+        //        var walletUser = _context.Wallet.Where(x => x.user_id == data.user_id).FirstOrDefault();
+        //        var amount = Int32.Parse(walletUser.male_usd) + rewardAmount;
+        //        walletUser.male_usd = amount.ToString();
+        //        _context.Wallet.Update(walletUser);
 
-                await _context.SaveChangesAsync();
-                return "Success";
-            } catch (Exception ex)
-            {
-                return ex.Message;
-            }
-        }
+        //        await _context.SaveChangesAsync();
+        //        return "Success";
+        //    } catch (Exception ex)
+        //    {
+        //        return ex.Message;
+        //    }
+        //}
 
         public async Task<List<ResRankingDto>> GetRanking()
         {
@@ -215,6 +216,60 @@ namespace SeminarAPI.Repositories.Implementation
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        public async Task<bool> UpdateRanking()
+        {
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                
+                    var getListTransaction = await _context.TransactionHistory.Where(x => x.status == 0).ToListAsync();
+                    if (getListTransaction != null && getListTransaction.Count > 0)
+                    {
+                        var ranking = new Ranking();
+                        var listUser = await _context.Users.ToListAsync();
+                        foreach (var item in listUser)
+                        {
+                            var listTransactionByUser = getListTransaction.Where(x => x.user_id == item.User_Id).ToList();
+                            if (listTransactionByUser != null && listTransactionByUser.Count > 0)
+                            {
+                                var checkUserInRanking = await _context.Ranking.Where(x => x.user_id == item.User_Id).FirstOrDefaultAsync();
+                                if (checkUserInRanking != null)
+                                {
+                                    var sumAmount = listTransactionByUser.Sum(x => int.Parse(x.reward_amount));
+                                    checkUserInRanking.reward_amount = (int.Parse(checkUserInRanking.reward_amount) + sumAmount).ToString();
+                                    _context.Ranking.Update(checkUserInRanking);
+                                }
+                                else
+                                {
+                                    ranking = new Ranking();
+                                    ranking.ranking_id = Guid.NewGuid().ToString();
+                                    ranking.user_id = item.User_Id;
+                                    var sumAmount = listTransactionByUser.Sum(x => int.Parse(x.reward_amount));
+                                    ranking.reward_amount = sumAmount.ToString();
+                                    await _context.Ranking.AddAsync(ranking);
+                                }
+
+                                foreach (var data in listTransactionByUser)
+                                {
+                                    data.status = 1;
+                                }
+                                _context.TransactionHistory.UpdateRange(listTransactionByUser);
+                            }
+                        }
+                        _context.SaveChanges();
+                    }
+                    scope.Complete();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return false;
+                }
             }
         }
     }

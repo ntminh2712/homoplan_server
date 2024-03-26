@@ -71,21 +71,32 @@ namespace SeminarAPI.Controllers
             return Ok(response);
         }
 
-        [HttpPost("CreatedTransaction")]
-        public async Task<IActionResult> CreatedTransaction([FromForm] RequestTransactionDto data)
+        //[HttpPost("CreatedTransaction")]
+        //public async Task<IActionResult> CreatedTransaction([FromForm] RequestTransactionDto data)
+        //{
+        //    if (data == null)
+        //    {
+        //        return BadRequest("Request body is empty");
+        //    }
+
+        //    var response = await _transactionHistory.CreatedTransaction(data);
+        //    if (response == null)
+        //    {
+        //        return BadRequest("Created false!");
+        //    }
+
+        //    return Ok("Thêm điểm thành công");
+        //}
+
+        [HttpPost("UpdateRanking")]
+        public async Task<IActionResult> UpdateRanking()
         {
-            if (data == null)
+            var response = await _transactionHistory.UpdateRanking();
+            if (response)
             {
-                return BadRequest("Request body is empty");
+                return Ok();
             }
-
-            var response = await _transactionHistory.CreatedTransaction(data);
-            if (response == null)
-            {
-                return BadRequest("Created false!");
-            }
-
-            return Ok("Thêm điểm thành công");
+            return BadRequest();
         }
 
         //[HttpPut("{id}")]
