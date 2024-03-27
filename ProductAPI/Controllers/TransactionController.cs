@@ -35,6 +35,19 @@ namespace SeminarAPI.Controllers
             return Ok(response);
         }
 
+        [HttpGet("GetDailyTasksByUser")]
+        public async Task<IActionResult> GetDailyTasksByUser(string userId)
+        {
+            var response = await _transactionHistory.GetDailyTasksByUser(userId);
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
+
         [HttpGet("GetWalletByUser")]
         public async Task<IActionResult> GetWalletByUser(string userId)
         {
@@ -48,9 +61,9 @@ namespace SeminarAPI.Controllers
         }
 
         [HttpGet("GetRanking")]
-        public async Task<IActionResult> GetRanking()
+        public async Task<IActionResult> GetRanking(string userId)
         {
-            var response = await _transactionHistory.GetRanking();
+            var response = await _transactionHistory.GetRanking(userId);
             if (response == null)
             {
                 return NotFound();

@@ -73,11 +73,11 @@ namespace SeminarAPI.Repositories.Implementation
         //    }
         //}
 
-        public async Task<List<ResRankingDto>> GetRanking()
+        public async Task<ResRankingUser> GetRanking(string userId)
         {
             try
             {
-                var result = (from data in _context.Ranking
+                var getallRanking = (from data in _context.Ranking
                               join user in _context.Users on
                               data.user_id equals user.User_Id into user_temp
                               from user in user_temp.DefaultIfEmpty()
@@ -94,11 +94,57 @@ namespace SeminarAPI.Repositories.Implementation
                                   status = data.status,
                                   Created_At = data.Created_At
                               }
-                    ).OrderByDescending(x => x.reward_amount).ToList();
-                if (result != null)
-                    return result;
+                    ).OrderByDescending(x => x.reward_amount)
+                    .ToList().Select((x, index) => new ResRankingDto
+                     {
+                         ranking_id = x.ranking_id,
+                         user_id = x.user_id,
+                         full_name = x.full_name,
+                         phone = x.phone,
+                         country = x.country,
+                         email = x.email,
+                         reward_amount = x.reward_amount,
+                         type = x.type,
+                         status = x.status,
+                         Created_At = x.Created_At,
+                         rank = index + 1
+                     })
+                     .ToList(); ;
 
-                return new List<ResRankingDto>();
+                var getRankUser = getallRanking.Where(x => x.user_id == userId).FirstOrDefault();
+
+                ResRankingUser response = new ResRankingUser();
+                if (getRankUser != null)
+                {
+                    response.my_rank = getRankUser.rank;
+                }
+                else
+                {
+                    response.my_rank = 0;
+                }
+                response.listRanking = new List<ResRankingDto>();
+
+                foreach (var rankingDto in getallRanking)
+                {
+                    response.listRanking.Add(rankingDto);
+                }
+
+                //for (int i=0; i < getallRanking.Count; i++)
+                //{
+                //    ResRankingDto data = new ResRankingDto();
+                //    response.listRanking[i].ranking_id = getallRanking[i].ranking_id;
+                //    response.listRanking[i].user_id = getallRanking[i].user_id;
+                //    response.listRanking[i].full_name = getallRanking[i].full_name;
+                //    response.listRanking[i].phone = getallRanking[i].phone;
+                //    response.listRanking[i].country = getallRanking[i].country;
+                //    response.listRanking[i].email = getallRanking[i].email;
+                //    response.listRanking[i].reward_amount = getallRanking[i].reward_amount;
+                //    response.listRanking[i].type = getallRanking[i].type;
+                //    response.listRanking[i].status = getallRanking[i].status;
+                //    response.listRanking[i].rank = getallRanking[i].rank;
+                //}
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -133,6 +179,37 @@ namespace SeminarAPI.Repositories.Implementation
                     return result;
 
                 return new List<ResTransactionHistoryDto>();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public async Task<List<DailyTasks>> GetDailyTasksByUser(string userId)
+        {
+            try
+            {
+                List<DailyTasks> response = new List<DailyTasks>();
+                var listDailyTaskByUser = await _context.TransactionHistory.Where(x => x.user_id == userId).ToListAsync();
+                var listDailyTasks = await _context.DailyTasks.ToListAsync();
+                if(listDailyTaskByUser != null && listDailyTaskByUser.Count > 0)
+                {
+                    foreach(var item in listDailyTasks)
+                    {
+                        var data = listDailyTaskByUser.Where(x => x.daily_tasks_id == item.daily_tasks_id).FirstOrDefault();
+                        if (data != null)
+                        {
+                            item.status = 1;
+                        }
+                        else
+                        {
+                            item.status = 0;
+                        }
+                        response.Add(item);
+                    }
+                }
+                return response;
             }
             catch (Exception ex)
             {

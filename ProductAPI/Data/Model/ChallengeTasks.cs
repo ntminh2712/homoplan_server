@@ -13,7 +13,7 @@ namespace SeminarAPI.Data.Model
         public string? title { get; set; }
         public string? Description { get; set; }
         public string? link { get; set; }
-        public int? status { get; set; } // 0 là chưa hoàn thành, 1 là đã hoàn thành
+        public int? status { get; set; } = 0; // 0 là chưa hoàn thành, 1 là đã hoàn thành
         public int? level { get; set; }
         public string? reward_amount { get; set; }
     }
